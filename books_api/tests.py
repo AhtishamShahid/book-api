@@ -48,6 +48,27 @@ class BooksTest(APITestCase):
         self.assertEqual(response.data['status'], 'success')
         self.assertEqual(Book.objects.count(), 1)
 
+    def test_update_book(self):
+        """
+        Ensure we can delete a new book .
+        """
+        data = {
+            "name": "My Book",
+            "isbn": "axm4ss",
+            "number_of_pages": 100,
+            "publisher": "Republic Publisher",
+            "country": "Pakistan",
+            "released": "2010-10-10",
+            "authors": []
+
+        }
+        record = self.client.post(reverse('books'), data=data, format='json')
+
+        data['name'] = 'My book 2'
+
+        record = self.client.put(reverse('books') + str(record.data['data']['id']), data=data, format='json')
+        print(record, 'updateddddd')
+
     def test_list_book(self):
         """
         Ensure we can list a new book .
@@ -76,4 +97,15 @@ class BooksTest(APITestCase):
         response = self.client.delete(reverse('books') + str(record.data['data']['id']))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data['data'], [])
+        self.assertEqual(response.data['status'], 'success')
+
+
+class BooksAPITest(APITestCase):
+    def test_api_ice_and_fire_response(self):
+        """
+        Test Data in books received from api
+        :return:
+        """
+        response = self.client.get(reverse('external-books'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'success')

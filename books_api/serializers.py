@@ -94,4 +94,4 @@ class BooksModelSerializer(serializers.ModelSerializer):
             instance.authors.clear()
             temp_author = Author.objects.create(**author)
             instance.authors.add(temp_author)
-            return instance
+        return instance

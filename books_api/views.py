@@ -49,7 +49,7 @@ class BooksDetail(generics.RetrieveUpdateDestroyAPIView):  # pylint:disable=too-
         super().update(request, *args, **kwargs)
         data = self.get_object()
         return Response(status=status.HTTP_200_OK, data={
-            "status_code": 200,
+            "status_code": status.HTTP_200_OK,
             "status": "success",
             "message": "The " + data.name + " was updated successfully",
         })
@@ -59,7 +59,7 @@ class BooksDetail(generics.RetrieveUpdateDestroyAPIView):  # pylint:disable=too-
         serializer = self.get_serializer(instance)
         data = {
             'data': serializer.data,
-            "status_code": 200,
+            "status_code": status.HTTP_200_OK,
             "status": "success",
         }
         return Response(status=status.HTTP_200_OK, data=data)
@@ -76,7 +76,6 @@ class BooksList(generics.ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -85,7 +84,7 @@ class BooksList(generics.ListCreateAPIView):
         serializer = self.get_serializer(queryset, many=True)
         data = {
             'data': serializer.data,
-            "status_code": 200,
+            "status_code": status.HTTP_200_OK,
             "status": "success",
         }
         return Response(status=status.HTTP_200_OK, data=data)
