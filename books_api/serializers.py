@@ -1,27 +1,45 @@
 """
 data serializers
 """
-from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
+from rest_framework import serializers
 from books_api.models import Book, Author
 
-"""
-BookSerializer
-"""
 
-
-class BookSerializer(serializers.Serializer):
+class ApiBookSerializer(serializers.Serializer):
+    """
+    BookSerializer
+    """
     name = serializers.CharField()
     isbn = serializers.CharField()
     authors = serializers.ListField(required=False)
-    numberOfPages = serializers.IntegerField()
+    number_of_pages = serializers.SerializerMethodField('get_number_of_pages')
     publisher = serializers.CharField()
     country = serializers.CharField()
-    released = serializers.CharField()
+    release_date = serializers.SerializerMethodField('get_release_date')
+
+    def get_release_date(self, instance):
+        """
+        Over ride default released property
+        :param instance:
+        :return:
+        """
+        return instance.released
+
+    def get_number_of_pages(self, instance):
+        """
+        Over ride default pages property
+        :param instance:
+        :return:
+        """
+        return instance.numberOfPages
 
 
 class AuthorModelSerializer(serializers.ModelSerializer):
+    """
+    Author Model serializer
+    """
+
     class Meta:
         model = Author
         fields = ['name']
@@ -31,19 +49,22 @@ class AuthorModelSerializer(serializers.ModelSerializer):
 
 
 class BooksModelSerializer(serializers.ModelSerializer):
-
+    """
+    Model serializer for books crud
+    """
     authors = AuthorModelSerializer(many=True)
 
-    # authors = serializers.ListField()
-
-    # authors = serializers.StringRelatedField(read_only=False, many=True)
-    # authors = PrimaryKeyRelatedField(required=True, many=True,
-    #                                      queryset=Author.objects.all())
     class Meta:
         model = Book
-        fields = ['id', 'name', 'isbn', 'authors', 'number_of_pages', 'publisher', 'country', 'released']
+        fields = ['id', 'name', 'isbn', 'authors', 'number_of_pages',
+                  'publisher', 'country', 'released']
 
     def create(self, validated_data):
+        """
+        override create to accommodate creation of relational data
+        :param validated_data:
+        :return:
+        """
         authors = validated_data.pop('authors')
         book = Book.objects.create(**validated_data)
 
@@ -54,6 +75,12 @@ class BooksModelSerializer(serializers.ModelSerializer):
         return book
 
     def update(self, instance, validated_data):
+        """
+        override create to accommodate creation of relational data
+        :param instance:
+        :param validated_data:
+        :return:
+        """
         authors = validated_data.pop('authors')
         instance.name = validated_data.get('name', instance.name)
         instance.isbn = validated_data.get('isbn', instance.isbn)
