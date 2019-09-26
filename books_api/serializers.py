@@ -1,9 +1,11 @@
 """
 data serializers
 """
-
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.encoding import smart_text
 from rest_framework import serializers
-from books_api.models import Book, Author
+from books_api.models import Book, Author, Publisher
+from django_countries.serializer_fields import CountryField
 
 
 class ApiBookSerializer(serializers.Serializer):
@@ -24,7 +26,7 @@ class ApiBookSerializer(serializers.Serializer):
         :param instance:
         :return:
         """
-        return instance.released
+        return instance['released']
 
     def get_number_of_pages(self, instance):
         """
@@ -32,66 +34,37 @@ class ApiBookSerializer(serializers.Serializer):
         :param instance:
         :return:
         """
-        return instance.numberOfPages
+        return instance['numberOfPages']
 
 
-class AuthorModelSerializer(serializers.ModelSerializer):
-    """
-    Author Model serializer
-    """
+class CreatableSlugRelatedField(serializers.SlugRelatedField):
 
-    class Meta:
-        model = Author
-        fields = ['name']
-
-    def to_representation(self, instance):
-        return instance.name
+    def to_internal_value(self, data):
+        try:
+            return self.get_queryset().get_or_create(**{self.slug_field: data})[0]
+        except ObjectDoesNotExist:
+            self.fail('does_not_exist', slug_name=self.slug_field, value=smart_text(data))
+        except (TypeError, ValueError):
+            self.fail('invalid')
 
 
 class BooksModelSerializer(serializers.ModelSerializer):
     """
     Model serializer for books crud
     """
-    authors = AuthorModelSerializer(many=True)
+    authors = CreatableSlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=Author.objects.all()
+    )
+    country = CountryField()
+
+    publisher = CreatableSlugRelatedField(
+        slug_field='name',
+        queryset=Publisher.objects.all()
+    )
 
     class Meta:
         model = Book
         fields = ['id', 'name', 'isbn', 'authors', 'number_of_pages',
                   'publisher', 'country', 'released']
-
-    def create(self, validated_data):
-        """
-        override create to accommodate creation of relational data
-        :param validated_data:
-        :return:
-        """
-        authors = validated_data.pop('authors')
-        book = Book.objects.create(**validated_data)
-
-        for author in authors:
-            Author.objects.filter(name=author)
-            temp_author = Author.objects.create(**author)
-            book.authors.add(temp_author)
-        return book
-
-    def update(self, instance, validated_data):
-        """
-        override create to accommodate creation of relational data
-        :param instance:
-        :param validated_data:
-        :return:
-        """
-        authors = validated_data.pop('authors')
-        instance.name = validated_data.get('name', instance.name)
-        instance.isbn = validated_data.get('isbn', instance.isbn)
-        instance.number_of_pages = validated_data.get('number_of_pages', instance.number_of_pages)
-        instance.publisher = validated_data.get('publisher', instance.publisher)
-        instance.country = validated_data.get('country', instance.country)
-        instance.released = validated_data.get('released', instance.released)
-        instance.save()
-
-        for author in authors:
-            instance.authors.clear()
-            temp_author = Author.objects.create(**author)
-            instance.authors.add(temp_author)
-        return instance

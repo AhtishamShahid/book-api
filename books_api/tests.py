@@ -13,38 +13,33 @@ class BooksTest(APITestCase):
     """
     Test Recipe CRUD
     """
+    books_url = reverse('books')
 
-    def setUp(self):
-        """
-         # We want to go ahead and originally create a RecipeTest.
-        :return:
-        """
+    data = {
+        "name": "My Book",
+        "isbn": "axm4ss",
+        "number_of_pages": 100,
+        "publisher": "Republic Publisher",
+        "country": "Pakistan",
+        "released": "2010-10-10",
+        "authors": []
 
-        self.create_url = reverse('books')
+    }
 
     def test_create_book(self):
         """
         Ensure we can create a new book and .
         """
-        data = {
-            "name": "My Book",
-            "isbn": "axm4ss",
-            "number_of_pages": 100,
-            "publisher": "Republic Publisher",
-            "country": "Pakistan",
-            "released": "2010-10-10",
-            "authors": []
 
-        }
-        response = self.client.post(reverse('books'), data=data, format='json')
+        response = self.client.post(self.books_url, data=self.data, format='json')
         response_data = response.data['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response_data['name'], data['name'])
-        self.assertEqual(response_data['isbn'], data['isbn'])
-        self.assertEqual(response_data['number_of_pages'], data['number_of_pages'])
-        self.assertEqual(response_data['publisher'], data['publisher'])
-        self.assertEqual(response_data['country'], data['country'])
-        self.assertEqual(response_data['released'], data['released'])
+        self.assertEqual(response_data['name'], self.data['name'])
+        self.assertEqual(response_data['isbn'], self.data['isbn'])
+        self.assertEqual(response_data['number_of_pages'], self.data['number_of_pages'])
+        self.assertEqual(response_data['publisher'], self.data['publisher'])
+        self.assertEqual(response_data['country'], 'PK')
+        self.assertEqual(response_data['released'], self.data['released'])
         self.assertEqual(response.data['status'], 'success')
         self.assertEqual(Book.objects.count(), 1)
 
@@ -52,29 +47,29 @@ class BooksTest(APITestCase):
         """
         Ensure we can delete a new book .
         """
-        data = {
-            "name": "My Book",
-            "isbn": "axm4ss",
-            "number_of_pages": 100,
-            "publisher": "Republic Publisher",
-            "country": "Pakistan",
-            "released": "2010-10-10",
-            "authors": []
 
-        }
-        record = self.client.post(reverse('books'), data=data, format='json')
+        record = self.client.post(reverse('books'), data=self.data, format='json')
 
-        data['name'] = 'My book 2'
-
-        record = self.client.put(reverse('books') + str(record.data['data']['id']), data=data, format='json')
-        print(record, 'updateddddd')
+        self.data['name'] = 'My book 2'
+        path = self.books_url + str(record.data['data']['id'])
+        response = self.client.put(path, data=self.data, format='json')
+        response_data = response.data['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_data['name'], self.data['name'])
+        self.assertEqual(response_data['isbn'], self.data['isbn'])
+        self.assertEqual(response_data['number_of_pages'], self.data['number_of_pages'])
+        self.assertEqual(response_data['publisher'], self.data['publisher'])
+        self.assertEqual(response_data['country'], 'PK')
+        self.assertEqual(response_data['released'], self.data['released'])
+        self.assertEqual(response.data['status'], 'success')
+        self.assertEqual(Book.objects.count(), 1)
 
     def test_list_book(self):
         """
         Ensure we can list a new book .
         """
 
-        response = self.client.get(reverse('books'))
+        response = self.client.get(self.books_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data'], [])
         self.assertEqual(response.data['status'], 'success')
@@ -83,18 +78,8 @@ class BooksTest(APITestCase):
         """
         Ensure we can delete a new book .
         """
-        data = {
-            "name": "My Book",
-            "isbn": "axm4ss",
-            "number_of_pages": 100,
-            "publisher": "Republic Publisher",
-            "country": "Pakistan",
-            "released": "2010-10-10",
-            "authors": []
-
-        }
-        record = self.client.post(reverse('books'), data=data, format='json')
-        response = self.client.delete(reverse('books') + str(record.data['data']['id']))
+        record = self.client.post(self.books_url, data=self.data, format='json')
+        response = self.client.delete(self.books_url + str(record.data['data']['id']))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data['data'], [])
         self.assertEqual(response.data['status'], 'success')
