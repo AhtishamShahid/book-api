@@ -1,14 +1,14 @@
 """
 # Create your views here.
 """
-
+import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.decorators import api_view
 
 from books_api.ice_and_fire_api import IceAndFireAPI
 from books_api.messages import UPDATE_MESSAGE, DELETE_MESSAGE
-from books_api.models import Book
+from books_api.models import Book, Publisher
 from books_api.serializers import ApiBookSerializer, BooksModelSerializer
 from books_api.util import make_response
 
@@ -30,9 +30,21 @@ class BooksList(generics.ListCreateAPIView):
     Books listing view
     """
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', 'country', 'publisher', 'released']
+    filterset_fields = ['name', 'country', 'released']
+
     queryset = Book.objects.all()
     serializer_class = BooksModelSerializer
+
+    def get_queryset(self):
+        publisher_query = self.request.GET.get('publisher')
+        if publisher_query is not None:
+            try:
+                publisher = Publisher.objects.filter(name=self.request.GET.get('publisher'))[0]
+                return self.queryset.filter(publisher=publisher)
+            except:
+                return self.queryset
+        else:
+            return self.queryset
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
