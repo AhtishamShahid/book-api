@@ -1,16 +1,22 @@
 import requests
 
 
+class Request:
+
+    def get(self, url, params):
+        data = requests.get(url, params=params)
+        return Response(data)
+
+
 class IceAndFireAPI:
     base_url = 'https://www.anapioficeandfire.com/api/'
 
     def get_books(self, query):
-        return self.__get('books', params=query)
+        path = self.make_path('books')
+        return Request().get(path, query)
 
-    def __get(self, path, params):
-        url = self.base_url + path
-        data = requests.get(url, params=params)
-        return Response(data)
+    def make_path(self, path):
+        return self.base_url + path
 
 
 class Response:
