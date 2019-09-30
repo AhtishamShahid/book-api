@@ -38,7 +38,9 @@ class ApiBookSerializer(serializers.Serializer):
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
-
+    """
+    To add find or create functionality to SlugRelatedField
+    """
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get_or_create(**{self.slug_field: data})[0]
@@ -66,5 +68,4 @@ class BooksModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ['id', 'name', 'isbn', 'authors', 'number_of_pages',
-                  'publisher', 'country', 'released']
+        fields = '__all__'

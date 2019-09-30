@@ -4,6 +4,12 @@ import requests
 class Request:
 
     def get(self, url, params):
+        """
+        Send get request to url and return Response Object
+        :param url:
+        :param params:
+        :return: Response
+        """
         data = requests.get(url, params=params)
         return Response(data)
 
@@ -20,18 +26,17 @@ class IceAndFireAPI:
 
 
 class Response:
-    status = ''
-    status_code = ''
-    data = []
-    initial_data = None
-
+    """
+    Create response object for API call
+    """
     def __init__(self, data):
         self.initial_data = data
         self.status_code = data.status_code
         self.data = self.__make_data()
+        self.initial_data = None
 
     def __make_data(self):
+        data = dict()
         if self.initial_data:
-            return self.initial_data.json()
-        else:
-            return dict()
+            data = self.initial_data.json()
+        return data
