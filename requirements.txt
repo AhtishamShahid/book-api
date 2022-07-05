@@ -8,4 +8,4 @@ pytz==2019.2
 requests==2.9.1
 six==1.10.0
 sqlparse==0.3.0
-ujson==1.35
+ujson==5.4.0
